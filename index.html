@@ -3,503 +3,1204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Media Player with Gemini AI</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Iconify -->
-    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-    <!-- HLS.js for HLS Streaming -->
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <!-- Dash.js for DASH Streaming -->
-    <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
-
+    <title>SecureTest - Anti-Cheat Test Platform</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Hide default video controls */
-        video::-webkit-media-controls { display: none !important; }
-        video::-moz-media-controls { display: none !important; }
-        video::media-controls { display: none !important; }
-
-        /* Custom progress bar styling */
-        .progress-bar {
-            -webkit-appearance: none; appearance: none;
-            width: 100%; height: 5px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 5px; outline: none; cursor: pointer;
-            transition: height 0.15s ease-in-out;
-        }
-        .progress-bar:hover { height: 8px; }
-        .progress-bar::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none;
-            width: 16px; height: 16px;
-            background: #3b82f6; border-radius: 50%;
-            cursor: pointer; border: 2px solid white;
-            transform: scale(0);
-            transition: transform 0.15s ease-in-out;
-        }
-        /* Use media-container class for hover effects */
-        .media-container:hover .progress-bar::-webkit-slider-thumb,
-        .progress-bar:active::-webkit-slider-thumb {
-            transform: scale(1);
-        }
-        .progress-bar::-moz-range-thumb {
-            width: 16px; height: 16px;
-            background: #3b82f6; border-radius: 50%;
-            cursor: pointer; border: 2px solid white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
         }
 
-        /* Custom volume slider styling */
-        .volume-slider {
-            -webkit-appearance: none; appearance: none;
-            background: rgba(255, 255, 255, 0.3);
-            outline: none; border-radius: 5px;
-            transition: all 0.2s;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
-        .volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none;
-            width: 14px; height: 14px;
-            background: white; border-radius: 50%;
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .login-form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
             cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
         }
 
-        /* Controls visibility */
-        .controls-container {
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-        }
-        .media-container:hover .controls-container,
-        .media-container.paused .controls-container,
-        .media-container.controls-active .controls-container {
-            opacity: 1;
-        }
-        
-        /* Custom Loader */
-        .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3b82f6;
-            border-radius: 50%;
-            width: 50px; height: 50px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
         }
 
-        /* Settings Menu */
-        .settings-menu { display: none; }
-        .settings-btn.active + .settings-menu,
-        .settings-menu:hover { display: block; }
-        
-        iconify-icon { font-size: 24px; }
-        
-        /* AI Modal */
-        #ai-modal-content .timestamp {
-            cursor: pointer;
-            text-decoration: underline;
-            color: #60a5fa; /* blue-400 */
-        }
-        #ai-modal-content .timestamp:hover {
-            color: #3b82f6; /* blue-600 */
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
-        /* Audio Player Specific Styles */
-        #audio-art {
-            display: none; /* Hidden by default */
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
         }
-        .media-container.is-audio {
-            background-color: #000; /* Black background for audio */
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336 0%, #da190b 100%);
+            color: white;
         }
-        /* FIX: Make video element invisible but functional for audio playback */
-        .media-container.is-audio #video {
-            opacity: 0;
-            pointer-events: none;
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
         }
-        .media-container.is-audio #audio-art {
+
+        .btn-full-width {
+            width: 100%;
+        }
+
+        .dashboard {
+            display: none;
+        }
+
+        .dashboard.active {
+            display: block;
+        }
+
+        .dashboard-header {
             display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: #f8f9fa;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .question-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .options-container {
+            margin-top: 15px;
+        }
+
+        .option-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .test-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .test-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .test-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .fullscreen-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .test-interface {
+            display: none;
+        }
+
+        .test-interface.active {
+            display: block;
+        }
+
+        .test-header-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .timer {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .test-content {
+            padding: 30px;
+        }
+
+        .question {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #667eea;
+        }
+
+        .question h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .question-options {
+            margin-top: 15px;
+        }
+
+        .option {
+            margin-bottom: 10px;
+        }
+
+        .option input {
+            margin-right: 10px;
+        }
+
+        .option label {
+            cursor: pointer;
+        }
+
+        .navigation {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .blocked-message {
+            text-align: center;
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .security-warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ffeaa7;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .recording {
+            animation: pulse 2s infinite;
+        }
+
+        .violation-warning {
+            background: #dc3545;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+            border-radius: 8px;
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-4">
-
-    <div class="w-full max-w-5xl mx-auto">
-        <h1 class="text-3xl font-bold text-center mb-4">Advanced Media Player with Gemini AI</h1>
-
-        <!-- Media Input Section -->
-        <div class="bg-gray-800 p-4 rounded-lg mb-4 flex flex-col sm:flex-row gap-4 items-center">
-            <div class="w-full">
-                <label for="media-upload" class="block text-sm font-medium mb-2">Upload Media File</label>
-                <input type="file" id="media-upload" accept="video/*,audio/*,application/x-mpegURL,application/dash+xml" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700">
-            </div>
-            <div class="w-full">
-                <label for="media-url" class="block text-sm font-medium mb-2">Or Enter Media URL (MP4, MP3, HLS, DASH)</label>
-                <div class="flex gap-2">
-                    <input type="url" id="media-url" placeholder="https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <button id="load-url-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Load</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Media Player -->
-        <div id="media-container" class="media-container relative w-full bg-black rounded-lg overflow-hidden shadow-2xl aspect-video flex items-center justify-center">
-            <video id="video" class="w-full h-full block" playsinline></video>
-            
-            <!-- Art for Audio files - Now displays title text -->
-            <div id="audio-art" class="absolute inset-0 items-center justify-center text-gray-400 p-8">
-                <p id="audio-title" class="text-3xl font-bold text-center"></p>
-            </div>
-
-            <!-- Custom Loader -->
-            <div id="loader" class="loader absolute top-1/2 left-1/2 -mt-6 -ml-6 hidden"></div>
-
-            <!-- Custom Controls -->
-            <div class="controls-container absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
-                <!-- Progress Bar -->
-                <input type="range" id="progress-bar" class="progress-bar w-full" value="0" min="0" max="100" step="0.1">
-
-                <!-- Bottom Controls -->
-                <div class="flex items-center justify-between mt-2">
-                    <!-- Left Controls -->
-                    <div class="flex items-center gap-4">
-                        <button id="play-pause-btn" class="text-white"><iconify-icon id="play-icon" icon="mdi:play"></iconify-icon><iconify-icon id="pause-icon" icon="mdi:pause" class="hidden"></iconify-icon></button>
-                        <div class="flex items-center gap-2">
-                            <button id="volume-btn"><iconify-icon id="volume-high-icon" icon="mdi:volume-high"></iconify-icon><iconify-icon id="volume-muted-icon" icon="mdi:volume-off" class="hidden"></iconify-icon></button>
-                            <input type="range" id="volume-slider" class="volume-slider w-24 h-1.5" min="0" max="1" step="0.01" value="1">
-                        </div>
-                        <div class="text-sm"><span id="current-time">00:00</span> / <span id="duration">00:00</span></div>
-                    </div>
-                    
-                    <!-- Center Controls (Skip) -->
-                    <div class="flex items-center gap-2">
-                        <button class="skip-btn p-1 rounded-md hover:bg-white/20" data-skip="-30" title="-30s"><iconify-icon icon="mdi:rewind-30"></iconify-icon></button>
-                        <button class="skip-btn p-1 rounded-md hover:bg-white/20" data-skip="-10" title="-10s"><iconify-icon icon="mdi:rewind-10"></iconify-icon></button>
-                        <button class="skip-btn p-1 rounded-md hover:bg-white/20" data-skip="10" title="+10s"><iconify-icon icon="mdi:fast-forward-10"></iconify-icon></button>
-                        <button class="skip-btn p-1 rounded-md hover:bg-white/20" data-skip="30" title="+30s"><iconify-icon icon="mdi:fast-forward-30"></iconify-icon></button>
-                    </div>
-
-                    <!-- Right Controls -->
-                    <div class="flex items-center gap-4">
-                        <!-- Gemini AI Button -->
-                        <button id="gemini-btn" class="text-white" title="✨ AI Features"><iconify-icon icon="mdi:sparkles"></iconify-icon></button>
-
-                        <button id="loop-btn" class="opacity-50" title="Loop"><iconify-icon icon="mdi:repeat"></iconify-icon></button>
-                        <button id="autoplay-btn" class="opacity-50" title="Autoplay"><iconify-icon icon="mdi:play-box-multiple"></iconify-icon></button>
-                        <div class="relative">
-                            <button class="settings-btn" title="Settings"><iconify-icon icon="mdi:cog"></iconify-icon></button>
-                            <div class="settings-menu absolute bottom-full right-0 mb-2 bg-gray-800/90 backdrop-blur-sm rounded-lg p-4 w-60 shadow-lg">
-                                <div class="setting-item mb-3">
-                                    <label class="text-sm font-medium">Playback Speed</label>
-                                    <select id="playback-speed" class="w-full mt-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm"><option value="0.25">0.25x</option><option value="0.5">0.5x</option><option value="0.75">0.75x</option><option value="1" selected>Normal</option><option value="1.25">1.25x</option><option value="1.5">1.5x</option><option value="2">2x</option><option value="3">3x</option><option value="5">5x</option></select>
-                                </div>
-                                <div id="brightness-setting" class="setting-item mb-3">
-                                    <label class="text-sm font-medium">Brightness</label>
-                                    <input type="range" id="brightness-slider" class="w-full mt-1" min="0.2" max="2" step="0.1" value="1">
-                                </div>
-                                <div id="quality-menu" class="setting-item mb-3 hidden">
-                                    <label class="text-sm font-medium">Quality</label>
-                                    <select id="quality-selector" class="w-full mt-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm"></select>
-                                </div>
-                                <div id="subtitle-menu" class="setting-item mb-3 hidden">
-                                    <label class="text-sm font-medium">Subtitles</label>
-                                    <select id="subtitle-selector" class="w-full mt-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm"></select>
-                                </div>
-                                <div id="audio-menu" class="setting-item hidden">
-                                    <label class="text-sm font-medium">Audio</label>
-                                    <select id="audio-selector" class="w-full mt-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm"></select>
-                                </div>
-                            </div>
-                        </div>
-                        <a id="download-btn" href="#" download class="text-white" title="Download"><iconify-icon icon="mdi:download"></iconify-icon></a>
-                        <button id="fullscreen-btn" class="text-white" title="Fullscreen"><iconify-icon id="fullscreen-open-icon" icon="mdi:fullscreen"></iconify-icon><iconify-icon id="fullscreen-close-icon" icon="mdi:fullscreen-exit" class="hidden"></iconify-icon></button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="text-center mt-2 text-xs text-gray-500">
-            <p>Quality switching requires an HLS (.m3u8) or DASH (.mpd) stream. A sample DASH URL is provided.</p>
-        </div>
+<body>
+    <div class="fullscreen-warning" id="fullscreenWarning">
+        <h2>⚠️ Security Violation Detected</h2>
+        <p>Your test has been automatically submitted due to using prohibited keys.</p>
+        <p>You have been blocked from accessing this platform.</p>
     </div>
 
-    <!-- Gemini AI Modal -->
-    <div id="ai-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div class="flex justify-between items-center p-4 border-b border-gray-700">
-                <h3 class="text-lg font-bold">✨ AI Features</h3>
-                <button id="ai-modal-close" class="text-gray-400 hover:text-white">&times;</button>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️EGC SecureTest</h1>
+            <p>EntroGroup & Company | Developed by Nishant</p>
+        </div>
+
+        <!-- Login Interface -->
+        <div id="loginInterface" class="card login-form">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #333;">Login to Platform</h2>
+
+
+            <div class="form-group">
+                <label for="loginRole">Login As:</label>
+                <select id="loginRole" class="form-control">
+                    <option value="">Select</option>
+                    <option value="user">Intern</option>
+                    <option value="admin">Administrator</option>
+                </select>
             </div>
-            <div class="p-6 flex-grow overflow-y-auto">
-                <div id="ai-modal-content">
-                    <!-- Content will be injected here by JS -->
+
+            <div class="form-group">
+                <label for="loginId">User ID:</label>
+                <input type="text" id="loginId" class="form-control" placeholder="Enter your ID" required>
+            </div>
+
+            <div class="form-group">
+                <label for="loginPass">Password:</label>
+                <input type="password" id="loginPass" class="form-control" placeholder="Enter your password" required>
+            </div>
+
+            <button onclick="login()" class="btn btn-primary btn-full-width">🔐 Secure Login</button>
+
+       
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="dashboard">
+            <div class="card">
+                <div class="dashboard-header">
+                    <div class="user-info">
+                        <div class="avatar">A</div>
+                        <div>
+                            <h3>Admin Dashboard</h3>
+                            <p>Manage tests and users</p>
+                        </div>
+                    </div>
+                    <button onclick="logout()" class="btn btn-danger">Logout</button>
+                </div>
+
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('tests')">📝 Manage Tests</div>
+                    <div class="tab" onclick="switchTab('users')">👥 Manage Users</div>
+                    <div class="tab" onclick="switchTab('results')">📊 View Results</div>
+                </div>
+
+                <!-- Tests Tab -->
+                <div id="testsTab" class="tab-content active">
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Create New Test</h3>
+                            <div class="form-group">
+                                <label>Test Name:</label>
+                                <input type="text" id="testName" class="form-control" placeholder="Enter test name">
+                            </div>
+                            <div class="form-group">
+                                <label>Time Limit (minutes):</label>
+                                <input type="number" id="testTime" class="form-control" value="60" min="1">
+                            </div>
+                            <button onclick="createTest()" class="btn btn-success btn-full-width">Create Test</button>
+                        </div>
+
+                        <div class="card">
+                            <h3>Add Question</h3>
+                            <div class="form-group">
+                                <label>Select Test:</label>
+                                <select id="questionTestSelect" class="form-control">
+                                    <option value="">Select a test</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Question Type:</label>
+                                <select id="questionType" class="form-control" onchange="updateQuestionForm()">
+                                    <option value="mcq">Multiple Choice (MCQ)</option>
+                                    <option value="msq">Multiple Select (MSQ)</option>
+                                    <option value="fillup">Fill in the Blank</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Question Text:</label>
+                                <textarea id="questionText" class="form-control" rows="3" placeholder="Enter your question"></textarea>
+                            </div>
+                            <div id="optionsContainer">
+                                <label>Options:</label>
+                                <div class="options-container">
+                                    <div class="option-input">
+                                        <input type="checkbox" id="opt1_correct">
+                                        <input type="text" id="opt1_text" class="form-control" placeholder="Option 1">
+                                        <label for="opt1_correct">Correct</label>
+                                    </div>
+                                    <div class="option-input">
+                                        <input type="checkbox" id="opt2_correct">
+                                        <input type="text" id="opt2_text" class="form-control" placeholder="Option 2">
+                                        <label for="opt2_correct">Correct</label>
+                                    </div>
+                                    <div class="option-input">
+                                        <input type="checkbox" id="opt3_correct">
+                                        <input type="text" id="opt3_text" class="form-control" placeholder="Option 3">
+                                        <label for="opt3_correct">Correct</label>
+                                    </div>
+                                    <div class="option-input">
+                                        <input type="checkbox" id="opt4_correct">
+                                        <input type="text" id="opt4_text" class="form-control" placeholder="Option 4">
+                                        <label for="opt4_correct">Correct</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="fillupContainer" style="display: none;">
+                                <label>Correct Answer:</label>
+                                <input type="text" id="fillupAnswer" class="form-control" placeholder="Enter correct answer">
+                            </div>
+                            <button onclick="addQuestion()" class="btn btn-primary btn-full-width">Add Question</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Existing Tests</h3>
+                        <div id="testsList"></div>
+                    </div>
+                </div>
+
+                <!-- Users Tab -->
+                <div id="usersTab" class="tab-content">
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Create User Account</h3>
+                            <div class="form-group">
+                                <label>User ID:</label>
+                                <input type="text" id="newUserId" class="form-control" placeholder="Enter user ID">
+                            </div>
+                            <div class="form-group">
+                                <label>Password:</label>
+                                <input type="text" id="newUserPass" class="form-control" placeholder="Enter password">
+                            </div>
+                            <div class="form-group">
+                                <label>Full Name:</label>
+                                <input type="text" id="newUserName" class="form-control" placeholder="Enter full name">
+                            </div>
+                            <button onclick="createUser()" class="btn btn-success btn-full-width">Create User</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>User Management</h3>
+                        <div id="usersList"></div>
+                    </div>
+                </div>
+
+                <!-- Results Tab -->
+                <div id="resultsTab" class="tab-content">
+                    <div class="card">
+                        <h3>Test Results</h3>
+                        <div id="resultsList"></div>
+                    </div>
                 </div>
             </div>
-             <div class="p-4 border-t border-gray-700 flex justify-end gap-3">
-                <button id="ai-summarize-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Summarize Media</button>
-                <button id="ai-timestamps-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg">Find Key Moments</button>
+        </div>
+
+        <!-- User Dashboard -->
+        <div id="userDashboard" class="dashboard">
+            <div class="card">
+                <div class="dashboard-header">
+                    <div class="user-info">
+                        <div class="avatar">U</div>
+                        <div>
+                            <h3 id="userName">User Dashboard</h3>
+                            <p>Available tests and results</p>
+                        </div>
+                    </div>
+                    <button onclick="logout()" class="btn btn-danger">Logout</button>
+                </div>
+
+                <div id="userContent">
+                    <div class="security-warning">
+                        <strong>🛡️ Anti-Cheat System Active:</strong> Using Ctrl key during test will immediately submit your test and block your account permanently.
+                    </div>
+
+                    <div class="card">
+                        <h3>Available Tests</h3>
+                        <div id="availableTests"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Test Results</h3>
+                        <div id="userResults"></div>
+                    </div>
+                </div>
+
+                <div id="blockedContent" style="display: none;">
+                    <div class="blocked-message">
+                        <h3>❌ Account Blocked</h3>
+                        <p>Your account has been permanently blocked due to security violations during testing.</p>
+                        <p>Contact the administrator for assistance.</p>
+                    </div>
+                </div>
             </div>
-            <div class="text-center p-2 text-xs text-gray-500">AI-generated content may be inaccurate.</div>
+        </div>
+
+        <!-- Test Interface -->
+        <div id="testInterface" class="dashboard">
+            <div class="card">
+                <div class="test-header-bar">
+                    <div>
+                        <h2 id="testTitle">Test Title</h2>
+                        <span id="testProgress">Question 1 of 10</span>
+                    </div>
+                    <div class="timer recording" id="timer">60:00</div>
+                </div>
+
+                <div id="securityAlert" class="violation-warning" style="display: none;">
+                    ⚠️ WARNING: Do not use Ctrl key or your test will be submitted immediately!
+                </div>
+
+                <div class="test-content">
+                    <div id="testQuestions"></div>
+                    
+                    <div class="navigation">
+                        <button onclick="submitTest()" class="btn btn-success">🚀 Submit Test</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // DOM Elements
-        const mediaContainer = document.getElementById('media-container');
-        const video = document.getElementById('video'); // Still using <video> tag for audio
-        const audioTitleEl = document.getElementById('audio-title');
-        const playPauseBtn = document.getElementById('play-pause-btn');
-        const playIcon = document.getElementById('play-icon');
-        const pauseIcon = document.getElementById('pause-icon');
-        const volumeBtn = document.getElementById('volume-btn');
-        const volumeHighIcon = document.getElementById('volume-high-icon');
-        const volumeMutedIcon = document.getElementById('volume-muted-icon');
-        const volumeSlider = document.getElementById('volume-slider');
-        const progressBar = document.getElementById('progress-bar');
-        const currentTimeEl = document.getElementById('current-time');
-        const durationEl = document.getElementById('duration');
-        const skipButtons = document.querySelectorAll('.skip-btn');
-        const loopBtn = document.getElementById('loop-btn');
-        const autoplayBtn = document.getElementById('autoplay-btn');
-        const playbackSpeedSelect = document.getElementById('playback-speed');
-        const brightnessSetting = document.getElementById('brightness-setting');
-        const brightnessSlider = document.getElementById('brightness-slider');
-        const fullscreenBtn = document.getElementById('fullscreen-btn');
-        const fullscreenOpenIcon = document.getElementById('fullscreen-open-icon');
-        const fullscreenCloseIcon = document.getElementById('fullscreen-close-icon');
-        const mediaUpload = document.getElementById('media-upload');
-        const mediaUrlInput = document.getElementById('media-url');
-        const loadUrlBtn = document.getElementById('load-url-btn');
-        const downloadBtn = document.getElementById('download-btn');
-        const loader = document.getElementById('loader');
-        const settingsBtn = document.querySelector('.settings-btn');
+        // Initialize data storage
+        let currentUser = null;
+        let currentTest = null;
+        let testStartTime = null;
+        let timerInterval = null;
+        let securityViolated = false;
 
-        // Menu Elements
-        const qualityMenu = document.getElementById('quality-menu');
-        const qualitySelector = document.getElementById('quality-selector');
-        const subtitleMenu = document.getElementById('subtitle-menu');
-        const subtitleSelector = document.getElementById('subtitle-selector');
-        const audioMenu = document.getElementById('audio-menu');
-        const audioSelector = document.getElementById('audio-selector');
+        // Initialize with demo data
+        if (!localStorage.getItem('tests')) {
+            localStorage.setItem('tests', JSON.stringify([]));
+        }
+        if (!localStorage.getItem('users')) {
+            const demoUsers = [
+                { id: 'admin', password: 'nishant5806', role: 'admin', name: 'Administrator' },
+                { id: 'user001', password: 'pass123', role: 'user', name: 'Demo User', blocked: false }
+            ];
+            localStorage.setItem('users', JSON.stringify(demoUsers));
+        }
+        if (!localStorage.getItem('results')) {
+            localStorage.setItem('results', JSON.stringify([]));
+        }
 
-        // Gemini AI Elements
-        const geminiBtn = document.getElementById('gemini-btn');
-        const aiModal = document.getElementById('ai-modal');
-        const aiModalClose = document.getElementById('ai-modal-close');
-        const aiModalContent = document.getElementById('ai-modal-content');
-        const aiSummarizeBtn = document.getElementById('ai-summarize-btn');
-        const aiTimestampsBtn = document.getElementById('ai-timestamps-btn');
+        function login() {
+            const role = document.getElementById('loginRole').value;
+            const id = document.getElementById('loginId').value;
+            const password = document.getElementById('loginPass').value;
 
-        let controlsTimeout;
-        let hls;
-        let dashPlayer;
-        let currentMediaTitle = "this media";
-
-        // --- Core Functions ---
-        function togglePlay() { if (video.paused) { video.play(); } else { video.pause(); } }
-        function updatePlayPauseIcon() {
-            if (video.paused) {
-                playIcon.classList.remove('hidden'); pauseIcon.classList.add('hidden');
-                mediaContainer.classList.add('paused');
-            } else {
-                playIcon.classList.add('hidden'); pauseIcon.classList.remove('hidden');
-                mediaContainer.classList.remove('paused');
+            if (!id || !password) {
+                alert('Please enter both ID and password');
+                return;
             }
-        }
-        function handleVolumeChange() { video.volume = volumeSlider.value; video.muted = volumeSlider.value === '0'; }
-        function updateVolumeIcon() {
-            if (video.muted || video.volume === 0) {
-                volumeHighIcon.classList.add('hidden'); volumeMutedIcon.classList.remove('hidden');
-            } else {
-                volumeHighIcon.classList.remove('hidden'); volumeMutedIcon.classList.add('hidden');
-            }
-        }
-        function toggleMute() {
-            video.muted = !video.muted;
-            if (video.muted) { volumeSlider.value = 0; } 
-            else { volumeSlider.value = video.volume > 0 ? video.volume : 1; }
-            handleVolumeChange();
-        }
-        function updateProgress() {
-            const value = (video.currentTime / video.duration) * 100 || 0;
-            progressBar.value = value;
-            progressBar.style.background = `linear-gradient(to right, #3b82f6 ${value}%, rgba(255, 255, 255, 0.3) ${value}%)`;
-            currentTimeEl.textContent = formatTime(video.currentTime);
-        }
-        function setProgress(e) { video.currentTime = (e.target.value / 100) * video.duration; }
-        function formatTime(time) {
-            if (isNaN(time)) return '00:00';
-            const minutes = Math.floor(time / 60);
-            const seconds = Math.floor(time % 60);
-            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }
-        function skip() { video.currentTime += parseFloat(this.dataset.skip); }
 
-        // --- Advanced Features ---
-        function toggleLoop() { video.loop = !video.loop; loopBtn.classList.toggle('opacity-50', !video.loop); loopBtn.classList.toggle('text-blue-400', video.loop); }
-        function toggleAutoplay() { video.autoplay = !video.autoplay; autoplayBtn.classList.toggle('opacity-50', !video.autoplay); autoplayBtn.classList.toggle('text-blue-400', video.autoplay); }
-        function setPlaybackSpeed() { video.playbackRate = parseFloat(playbackSpeedSelect.value); }
-        function setBrightness() { video.style.filter = `brightness(${brightnessSlider.value})`; }
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) { mediaContainer.requestFullscreen().catch(err => console.error(`Fullscreen error: ${err.message}`)); } 
-            else { document.exitFullscreen(); }
-        }
-        function updateFullscreenIcon() {
-             if (!document.fullscreenElement) {
-                fullscreenOpenIcon.classList.remove('hidden'); fullscreenCloseIcon.classList.add('hidden');
-            } else {
-                fullscreenOpenIcon.classList.add('hidden'); fullscreenCloseIcon.classList.remove('hidden');
-            }
-        }
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.id === id && u.password === password && u.role === role);
 
-        // --- Media Loading & Streaming Engine ---
-        function loadMedia(src, file = null) {
-            let title = "this media";
-            let isAudio = false;
-
-            if (file) {
-                title = file.name.replace(/\.[^/.]+$/, "").replace(/_/g, ' ');
-                isAudio = file.type.startsWith('audio/');
-            } else {
-                title = src.substring(src.lastIndexOf('/') + 1).replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
-                const extension = src.split('.').pop().toLowerCase();
-                isAudio = ['mp3', 'wav', 'ogg', 'm4a'].includes(extension);
+            if (!user) {
+                alert('Invalid credentials');
+                return;
             }
+
+            if (user.blocked && role === 'user') {
+                alert('Your account has been blocked due to security violations');
+                return;
+            }
+
+            currentUser = user;
+            document.getElementById('loginInterface').style.display = 'none';
             
-            currentMediaTitle = title;
-            mediaContainer.classList.toggle('is-audio', isAudio);
-            brightnessSetting.classList.toggle('hidden', isAudio);
-            qualityMenu.classList.add('hidden'); // Always hide quality initially
+            if (role === 'admin') {
+                document.getElementById('adminDashboard').classList.add('active');
+                loadAdminData();
+            } else {
+                document.getElementById('userDashboard').classList.add('active');
+                document.getElementById('userName').textContent = user.name || user.id;
+                loadUserData();
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.querySelectorAll('.dashboard').forEach(d => d.classList.remove('active'));
+            document.getElementById('loginInterface').style.display = 'block';
+            document.getElementById('loginId').value = '';
+            document.getElementById('loginPass').value = '';
+            if (timerInterval) clearInterval(timerInterval);
             
-            if (isAudio) {
-                audioTitleEl.textContent = title;
+            // Clean up test interface
+            currentTest = null;
+            securityViolated = false;
+            document.removeEventListener('keydown', handleKeyPress);
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        function createTest() {
+            const name = document.getElementById('testName').value;
+            const time = parseInt(document.getElementById('testTime').value);
+
+            if (!name || !time) {
+                alert('Please enter test name and time limit');
+                return;
             }
 
-            // Clean up previous instances
-            if (hls) { hls.destroy(); hls = null; }
-            if (dashPlayer) { dashPlayer.reset(); dashPlayer = null; }
-            const currentSrc = video.getAttribute('src');
-            if (currentSrc && currentSrc.startsWith('blob:')) { URL.revokeObjectURL(currentSrc); }
+            const tests = JSON.parse(localStorage.getItem('tests') || '[]');
+            const newTest = {
+                id: Date.now().toString(),
+                name: name,
+                timeLimit: time,
+                questions: [],
+                createdBy: currentUser.id,
+                createdAt: new Date().toISOString()
+            };
 
-            // Hide optional menus
-            subtitleMenu.classList.add('hidden');
-            audioMenu.classList.add('hidden');
+            tests.push(newTest);
+            localStorage.setItem('tests', JSON.stringify(tests));
 
-            if (!isAudio && src.includes('.m3u8')) {
-                if (Hls.isSupported()) {
-                    hls = new Hls();
-                    hls.loadSource(src);
-                    hls.attachMedia(video);
-                    hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => setupHlsQualityMenu(data.levels));
-                    downloadBtn.style.display = 'none';
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = src;
+            document.getElementById('testName').value = '';
+            document.getElementById('testTime').value = '60';
+            
+            loadAdminData();
+            alert('Test created successfully!');
+        }
+
+        function updateQuestionForm() {
+            const questionType = document.getElementById('questionType').value;
+            const optionsContainer = document.getElementById('optionsContainer');
+            const fillupContainer = document.getElementById('fillupContainer');
+
+            if (questionType === 'fillup') {
+                optionsContainer.style.display = 'none';
+                fillupContainer.style.display = 'block';
+            } else {
+                optionsContainer.style.display = 'block';
+                fillupContainer.style.display = 'none';
+                
+                // Update checkboxes for MCQ vs MSQ
+                const checkboxes = optionsContainer.querySelectorAll('input[type="checkbox"]');
+                if (questionType === 'mcq') {
+                    checkboxes.forEach(cb => cb.type = 'radio');
+                    checkboxes.forEach(cb => cb.name = 'correctOption');
+                } else {
+                    checkboxes.forEach(cb => cb.type = 'checkbox');
+                    checkboxes.forEach(cb => cb.name = '');
                 }
-            } else if (!isAudio && src.includes('.mpd')) {
-                dashPlayer = dash.MediaPlayer().create();
-                dashPlayer.initialize(video, src, video.autoplay);
-                dashPlayer.on(dash.MediaPlayer.events.STREAM_INITIALIZED, setupDashQualityMenu);
-                downloadBtn.style.display = 'none';
+            }
+        }
+
+        function addQuestion() {
+            const testId = document.getElementById('questionTestSelect').value;
+            const questionType = document.getElementById('questionType').value;
+            const questionText = document.getElementById('questionText').value;
+
+            if (!testId || !questionText) {
+                alert('Please select a test and enter question text');
+                return;
+            }
+
+            const tests = JSON.parse(localStorage.getItem('tests') || '[]');
+            const test = tests.find(t => t.id === testId);
+
+            if (!test) {
+                alert('Test not found');
+                return;
+            }
+
+            const question = {
+                id: Date.now().toString(),
+                type: questionType,
+                text: questionText,
+                options: [],
+                correctAnswer: null
+            };
+
+            if (questionType === 'fillup') {
+                question.correctAnswer = document.getElementById('fillupAnswer').value;
             } else {
-                // Standard video/audio file (MP4, WebM, MP3, etc.)
-                video.src = src;
-                downloadBtn.href = src;
-                downloadBtn.style.display = 'block';
+                for (let i = 1; i <= 4; i++) {
+                    const optText = document.getElementById(`opt${i}_text`).value;
+                    const isCorrect = document.getElementById(`opt${i}_correct`).checked;
+                    
+                    if (optText) {
+                        question.options.push({
+                            id: i,
+                            text: optText,
+                            correct: isCorrect
+                        });
+                    }
+                }
             }
-            if(video.autoplay) video.play();
+
+            test.questions.push(question);
+            localStorage.setItem('tests', JSON.stringify(tests));
+
+            // Clear form
+            document.getElementById('questionText').value = '';
+            document.getElementById('fillupAnswer').value = '';
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`opt${i}_text`).value = '';
+                document.getElementById(`opt${i}_correct`).checked = false;
+            }
+
+            loadAdminData();
+            alert('Question added successfully!');
         }
 
-        function handleFileUpload(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const fileURL = URL.createObjectURL(file);
-                loadMedia(fileURL, file);
-                downloadBtn.download = file.name;
+        function createUser() {
+            const id = document.getElementById('newUserId').value;
+            const password = document.getElementById('newUserPass').value;
+            const name = document.getElementById('newUserName').value;
+
+            if (!id || !password || !name) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            
+            if (users.find(u => u.id === id)) {
+                alert('User ID already exists');
+                return;
+            }
+
+            const newUser = {
+                id: id,
+                password: password,
+                name: name,
+                role: 'user',
+                blocked: false,
+                createdAt: new Date().toISOString()
+            };
+
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
+
+            document.getElementById('newUserId').value = '';
+            document.getElementById('newUserPass').value = '';
+            document.getElementById('newUserName').value = '';
+
+            loadAdminData();
+            alert('User created successfully!');
+        }
+
+        function deleteTest(testId) {
+            if (confirm('Are you sure you want to delete this test?')) {
+                const tests = JSON.parse(localStorage.getItem('tests') || '[]');
+                const updatedTests = tests.filter(t => t.id !== testId);
+                localStorage.setItem('tests', JSON.stringify(updatedTests));
+                loadAdminData();
             }
         }
-        function handleUrlLoad() {
-            const url = mediaUrlInput.value.trim();
-            if (url) { 
-                loadMedia(url); 
-                downloadBtn.download = 'media'; 
+
+        function blockUser(userId) {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.id === userId);
+            if (user) {
+                user.blocked = true;
+                localStorage.setItem('users', JSON.stringify(users));
+                loadAdminData();
+                alert('User blocked successfully');
             }
         }
-        
-        // --- Track & Quality Management ---
-        function setupHlsQualityMenu(levels) { /* Unchanged from previous version */ }
-        function setupDashQualityMenu() { /* Unchanged */ }
-        function changeQuality() { /* Unchanged */ }
-        function setupTracks() { /* Unchanged */ }
-        function changeSubtitle() { /* Unchanged */ }
-        function changeAudioTrack() { /* Unchanged */ }
 
-        // --- Gemini AI Integration ---
-        async function callGeminiAPI(prompt) { /* Unchanged */ }
-        function formatAIResponse(text) { /* Unchanged */ }
-        function handleTimestampClick(e) { /* Unchanged */ }
-
-        // --- UI/UX Functions ---
-        function hideControls() { if (video.paused) return; mediaContainer.classList.remove('controls-active'); }
-        function showControls() {
-            mediaContainer.classList.add('controls-active');
-            clearTimeout(controlsTimeout);
-            controlsTimeout = setTimeout(hideControls, 3000);
+        function unblockUser(userId) {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.id === userId);
+            if (user) {
+                user.blocked = false;
+                localStorage.setItem('users', JSON.stringify(users));
+                loadAdminData();
+                alert('User unblocked successfully');
+            }
         }
 
-        // --- Event Listeners ---
-        video.addEventListener('play', updatePlayPauseIcon);
-        video.addEventListener('pause', updatePlayPauseIcon);
-        video.addEventListener('click', togglePlay);
-        video.addEventListener('timeupdate', updateProgress);
-        video.addEventListener('loadedmetadata', () => { durationEl.textContent = formatTime(video.duration); setupTracks(); });
-        video.addEventListener('volumechange', updateVolumeIcon);
-        video.addEventListener('waiting', () => loader.classList.remove('hidden'));
-        video.addEventListener('canplay', () => loader.classList.add('hidden'));
-        
-        playPauseBtn.addEventListener('click', (e) => { e.stopPropagation(); togglePlay(); });
-        volumeBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleMute(); });
-        volumeSlider.addEventListener('input', handleVolumeChange);
-        progressBar.addEventListener('input', setProgress);
-        skipButtons.forEach(button => button.addEventListener('click', (e) => { e.stopPropagation(); skip.call(button); }));
-        loopBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLoop(); });
-        autoplayBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleAutoplay(); });
-        playbackSpeedSelect.addEventListener('change', setPlaybackSpeed);
-        brightnessSlider.addEventListener('input', setBrightness);
-        fullscreenBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleFullscreen(); });
-        document.addEventListener('fullscreenchange', updateFullscreenIcon);
-        mediaUpload.addEventListener('change', handleFileUpload);
-        loadUrlBtn.addEventListener('click', handleUrlLoad);
-        qualitySelector.addEventListener('change', changeQuality);
-        subtitleSelector.addEventListener('change', changeSubtitle);
-        audioSelector.addEventListener('change', changeAudioTrack);
-        
-        mediaContainer.addEventListener('mousemove', showControls);
-        mediaContainer.addEventListener('mouseleave', () => { clearTimeout(controlsTimeout); controlsTimeout = setTimeout(hideControls, 500); });
-        settingsBtn.addEventListener('click', (e) => { e.stopPropagation(); settingsBtn.classList.toggle('active'); });
-        document.addEventListener('click', (e) => {
-            const settingsMenuEl = document.querySelector('.settings-menu');
-            if (settingsMenuEl && !settingsBtn.contains(e.target) && !settingsMenuEl.contains(e.target)) { settingsBtn.classList.remove('active'); }
+        function loadAdminData() {
+            const tests = JSON.parse(localStorage.getItem('tests') || '[]');
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const results = JSON.parse(localStorage.getItem('results') || '[]');
+
+            // Load test selector
+            const testSelect = document.getElementById('questionTestSelect');
+            testSelect.innerHTML = '<option value="">Select a test</option>';
+            tests.forEach(test => {
+                testSelect.innerHTML += `<option value="${test.id}">${test.name}</option>`;
+            });
+
+            // Load tests list
+            const testsList = document.getElementById('testsList');
+            testsList.innerHTML = '';
+            tests.forEach(test => {
+                testsList.innerHTML += `
+                    <div class="test-item">
+                        <div class="test-header">
+                            <h4>${test.name}</h4>
+                            <span>${test.timeLimit} minutes</span>
+                        </div>
+                        <p>Questions: ${test.questions.length}</p>
+                        <p>Created: ${new Date(test.createdAt).toLocaleDateString()}</p>
+                        <div class="test-actions">
+                            <button onclick="deleteTest('${test.id}')" class="btn btn-danger">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Load users list
+            const usersList = document.getElementById('usersList');
+            usersList.innerHTML = '';
+            users.filter(u => u.role === 'user').forEach(user => {
+                usersList.innerHTML += `
+                    <div class="test-item">
+                        <div class="test-header">
+                            <h4>${user.name}</h4>
+                            <span>ID: ${user.id}</span>
+                        </div>
+                        <p>Status: ${user.blocked ? '🔴 Blocked' : '🟢 Active'}</p>
+                        <p>Created: ${new Date(user.createdAt).toLocaleDateString()}</p>
+                        <div class="test-actions">
+                            ${user.blocked ? 
+                                `<button onclick="unblockUser('${user.id}')" class="btn btn-success">Unblock</button>` :
+                                `<button onclick="blockUser('${user.id}')" class="btn btn-warning">Block</button>`}
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Load results list
+            const resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '';
+            results.forEach(result => {
+                const test = tests.find(t => t.id === result.testId);
+                const user = users.find(u => u.id === result.userId);
+                resultsList.innerHTML += `
+                    <div class="test-item">
+                        <div class="test-header">
+                            <h4>${test ? test.name : 'Unknown Test'}</h4>
+                            <span>Score: ${result.score}%</span>
+                        </div>
+                        <p>Student: ${user ? user.name : result.userId}</p>
+                        <p>Submitted: ${new Date(result.submittedAt).toLocaleString()}</p>
+                        <p>Time Taken: ${Math.floor(result.timeTaken / 60)}m ${result.timeTaken % 60}s</p>
+                        ${result.securityViolation ? '<p style="color: red;">⚠️ Security Violation Detected</p>' : ''}
+                    </div>
+                `;
+            });
+        }
+
+        function loadUserData() {
+            if (currentUser.blocked) {
+                document.getElementById('userContent').style.display = 'none';
+                document.getElementById('blockedContent').style.display = 'block';
+                return;
+            }
+
+            const tests = JSON.parse(localStorage.getItem('tests') || '[]');
+            const results = JSON.parse(localStorage.getItem('results') || '[]');
+            const userResults = results.filter(r => r.userId === currentUser.id);
+
+            // Load available tests
+            const availableTests = document.getElementById('availableTests');
+            availableTests.innerHTML = '';
+            
+            tests.forEach(test => {
+                const hasAttempted = userResults.find(r => r.testId === test.id);
+                if (!hasAttempted) {
+                    availableTests.innerHTML += `
+                        <div class="test-item">
+                            <div class="test-header">
+                                <h4>${test.name}</h4>
+                                <span>${test.timeLimit} minutes</span>
+                            </div>
+                            <p>Questions: ${test.questions.length}</p>
+                            <div class="test-actions">
+                                <button onclick="startTest('${test.id}')" class="btn btn-primary">Start Test</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            if (availableTests.innerHTML === '') {
+                availableTests.innerHTML = '<p>No tests available or all tests completed.</p>';
+            }
+
+            // Load user results
+            const userResultsDiv = document.getElementById('userResults');
+            userResultsDiv.innerHTML = '';
+            
+            userResults.forEach(result => {
+                const test = tests.find(t => t.id === result.testId);
+                userResultsDiv.innerHTML += `
+                    <div class="test-item">
+                        <div class="test-header">
+                            <h4>${test ? test.name : 'Unknown Test'}</h4>
+                            <span>Score: ${result.score}%</span>
+                        </div>
+                        <p>Submitted: ${new Date(result.submittedAt).toLocaleString()}</p>
+                        <p>Time Taken: ${Math.floor(result.timeTaken / 60)}m ${result.timeTaken % 60}s</p>
+                        ${result.securityViolation ? '<p style="color: red;">⚠️ Security Violation</p>' : ''}
+                    </div>
+                `;
+            });
+
+            if (userResultsDiv.innerHTML === '') {
+                userResultsDiv.innerHTML = '<p>No test results yet.</p>';
+            }
+        }
+
+        function startTest(testId) {
+            const tests = JSON.parse(localStorage.getItem('tests') || '[]');
+            const test = tests.find(t => t.id === testId);
+            
+            if (!test || test.questions.length === 0) {
+                alert('Test not found or has no questions');
+                return;
+            }
+
+            if (confirm('⚠️ IMPORTANT: During the test, do not use the Ctrl key as it will automatically submit your test and block your account. Do you want to continue?')) {
+                currentTest = test;
+                testStartTime = Date.now();
+                securityViolated = false;
+                
+                document.getElementById('userDashboard').classList.remove('active');
+                document.getElementById('testInterface').classList.add('active');
+                
+                loadTestInterface();
+                setupSecurityMonitoring();
+            }
+        }
+
+        function loadTestInterface() {
+            document.getElementById('testTitle').textContent = currentTest.name;
+            document.getElementById('testProgress').textContent = `${currentTest.questions.length} Questions`;
+            
+            const questionsContainer = document.getElementById('testQuestions');
+            questionsContainer.innerHTML = '';
+            
+            currentTest.questions.forEach((question, index) => {
+                let questionHTML = `
+                    <div class="question">
+                        <h3>Question ${index + 1}: ${question.text}</h3>
+                `;
+                
+                if (question.type === 'fillup') {
+                    questionHTML += `
+                        <input type="text" class="form-control" id="answer_${question.id}" placeholder="Enter your answer">
+                    `;
+                } else {
+                    questionHTML += '<div class="question-options">';
+                    question.options.forEach(option => {
+                        const inputType = question.type === 'mcq' ? 'radio' : 'checkbox';
+                        const name = question.type === 'mcq' ? `question_${question.id}` : '';
+                        questionHTML += `
+                            <div class="option">
+                                <input type="${inputType}" id="opt_${question.id}_${option.id}" 
+                                       name="${name}" value="${option.id}">
+                                <label for="opt_${question.id}_${option.id}">${option.text}</label>
+                            </div>
+                        `;
+                    });
+                    questionHTML += '</div>';
+                }
+                
+                questionHTML += '</div>';
+                questionsContainer.innerHTML += questionHTML;
+            });
+            
+            startTimer();
+        }
+
+        function startTimer() {
+            let timeLeft = currentTest.timeLimit * 60; // Convert to seconds
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('timer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    submitTest(true); // Auto-submit when time runs out
+                }
+            }, 1000);
+        }
+
+        function submitTest(autoSubmit = false) {
+            if (!autoSubmit && !confirm('Are you sure you want to submit your test?')) {
+                return;
+            }
+
+            clearInterval(timerInterval);
+            const timeTaken = Math.floor((Date.now() - testStartTime) / 1000);
+            
+            // Collect answers
+            const answers = {};
+            currentTest.questions.forEach(question => {
+                if (question.type === 'fillup') {
+                    const answerInput = document.getElementById(`answer_${question.id}`);
+                    answers[question.id] = answerInput ? answerInput.value.trim() : '';
+                } else {
+                    const selectedOptions = [];
+                    question.options.forEach(option => {
+                        const input = document.getElementById(`opt_${question.id}_${option.id}`);
+                        if (input && input.checked) {
+                            selectedOptions.push(option.id);
+                        }
+                    });
+                    answers[question.id] = selectedOptions;
+                }
+            });
+            
+            // Calculate score
+            let correctAnswers = 0;
+            let totalQuestions = currentTest.questions.length;
+            
+            currentTest.questions.forEach(question => {
+                const userAnswer = answers[question.id];
+                
+                if (question.type === 'fillup') {
+                    if (userAnswer.toLowerCase() === question.correctAnswer.toLowerCase()) {
+                        correctAnswers++;
+                    }
+                } else {
+                    const correctOptions = question.options.filter(opt => opt.correct).map(opt => opt.id);
+                    const userOptions = Array.isArray(userAnswer) ? userAnswer : [];
+                    
+                    if (correctOptions.length === userOptions.length && 
+                        correctOptions.every(opt => userOptions.includes(opt))) {
+                        correctAnswers++;
+                    }
+                }
+            });
+            
+            const score = Math.round((correctAnswers / totalQuestions) * 100);
+            
+            // Save result
+            const results = JSON.parse(localStorage.getItem('results') || '[]');
+            const result = {
+                id: Date.now().toString(),
+                userId: currentUser.id,
+                testId: currentTest.id,
+                answers: answers,
+                score: score,
+                timeTaken: timeTaken,
+                submittedAt: new Date().toISOString(),
+                securityViolation: securityViolated,
+                autoSubmitted: autoSubmit
+            };
+            
+            results.push(result);
+            localStorage.setItem('results', JSON.stringify(results));
+            
+            // If security violation, block user
+            if (securityViolated) {
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                const user = users.find(u => u.id === currentUser.id);
+                if (user) {
+                    user.blocked = true;
+                    localStorage.setItem('users', JSON.stringify(users));
+                }
+            }
+            
+            // Clean up test
+            document.removeEventListener('keydown', handleKeyPress);
+            document.getElementById('testInterface').classList.remove('active');
+            
+            if (securityViolated) {
+                showSecurityViolation();
+            } else {
+                document.getElementById('userDashboard').classList.add('active');
+                loadUserData();
+                alert(`Test submitted successfully!\nYour Score: ${score}%\nTime Taken: ${Math.floor(timeTaken / 60)}m ${timeTaken % 60}s`);
+            }
+            
+            // Reset test variables
+            currentTest = null;
+            securityViolated = false;
+        }
+
+        function setupSecurityMonitoring() {
+            // Only monitor Ctrl key presses during test
+            document.addEventListener('keydown', handleKeyPress);
+        }
+
+        function handleKeyPress(e) {
+            if (!currentTest) return;
+            
+            // Only trigger violation on Ctrl key
+            if (e.ctrlKey) {
+                e.preventDefault();
+                triggerSecurityViolation('Used Ctrl key during test');
+                return;
+            }
+        }
+
+        function triggerSecurityViolation(reason) {
+            console.log('Security violation:', reason);
+            securityViolated = true;
+            document.getElementById('securityAlert').style.display = 'block';
+            setTimeout(() => {
+                submitTest(true); // Force submit after brief delay
+            }, 1000);
+        }
+
+        function showSecurityViolation() {
+            document.getElementById('fullscreenWarning').style.display = 'flex';
+            setTimeout(() => {
+                logout();
+                document.getElementById('fullscreenWarning').style.display = 'none';
+            }, 5000);
+        }
+
+        // Initialize question form
+        updateQuestionForm();
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (timerInterval) clearInterval(timerInterval);
+            document.removeEventListener('keydown', handleKeyPress);
+            currentTest = null;
+            securityViolated = false;
         });
 
-        // Gemini AI Event Listeners
-        geminiBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            aiModal.classList.remove('hidden');
-            aiModalContent.innerHTML = `<p>What would you like to know about "${currentMediaTitle}"?</p>`;
-        });
-        aiModalClose.addEventListener('click', () => aiModal.classList.add('hidden'));
-        aiModal.addEventListener('click', (e) => { if (e.target === aiModal) { aiModal.classList.add('hidden'); }});
-        aiSummarizeBtn.addEventListener('click', () => {
-            const prompt = `Provide a concise, one-paragraph summary for a media file titled "${currentMediaTitle}".`;
-            callGeminiAPI(prompt);
-        });
-        aiTimestampsBtn.addEventListener('click', () => {
-            const prompt = `Analyze the title of a media file, "${currentMediaTitle}", which is ${formatTime(video.duration)} long. Based on the title, generate a list of key moments or chapters with timestamps. For example: "00:30 - Introduction", "05:15 - Main Topic". If the title is too generic, create a plausible chapter list for a media file of that length.`;
-            callGeminiAPI(prompt);
-        });
-        aiModalContent.addEventListener('click', handleTimestampClick);
-
+        console.log('🛡️ SecureTest Platform Loaded');
+        console.log('Demo Admin: admin/admin123');
+        console.log('Demo User: user001/pass123');
     </script>
 </body>
 </html>
